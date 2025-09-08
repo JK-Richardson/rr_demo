@@ -13,21 +13,19 @@ class Cell:
         self.target = None
 
 class Board:
-    def __init__(self, file_path, config_path='board.yaml'):
-        self.grid = self._load_board_from_file(file_path)
-        self.width = len(self.grid[0])
-        self.height = len(self.grid)
-        self._load_config_and_place_targets(config_path)
-        self.font = pygame.font.SysFont(None, 24)
-        self.target_font = pygame.font.SysFont("dejavusans", 32)
-        self.buffer = 50
+    def __init__(self, config_path='board.yaml'):
+        config = self._load_config(config_path)
+        self.width = config.get('width', 16)  # Default to 16 if not specified
+        self.height = config.get('height', 16) # Default to 16 if not specified
+        self.grid = self._create_empty_grid(self.width, self.height)
 
-    def _load_config_and_place_targets(self, config_path):
-        with open(config_path, 'r') as f:
-            config = yaml.safe_load(f)
         self.grid_line_color = tuple(config.get('grid_line_color', [200, 200, 200]))
         self.wall_color = tuple(config.get('wall_color', [255, 0, 0]))
         self.show_cell_coords = config.get('show_cell_coords', False)
+
+        self.font = pygame.font.SysFont(None, 24)
+        self.target_font = pygame.font.SysFont("dejavusans", 32)
+        self.buffer = 50
         
         targets = config.get('targets', {})
         for target_id, pos in targets.items():
@@ -39,26 +37,43 @@ class Board:
                 # Handle invalid target definition or position
                 pass
 
-    def _load_board_from_file(self, file_path):
-        with open(file_path, 'r') as f:
-            lines = f.readlines()
-        
+        self._apply_walls(config)
+
+    def _load_config(self, config_path):
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        return config
+
+    def _apply_walls(self, config):
+        # Apply outer border walls
+        for r in range(self.height):
+            self.grid[r][0].has_wall_west = True
+            self.grid[r][self.width - 1].has_wall_east = True
+        for c in range(self.width):
+            self.grid[0][c].has_wall_north = True
+            self.grid[self.height - 1][c].has_wall_south = True
+
+        # Apply internal walls from config
+        walls_config = config.get('walls', {})
+        for coord_str, wall_def in walls_config.items():
+            # Convert string key "(row, col)" to tuple (row, col)
+            row, col = map(int, coord_str.strip('()').split(','))
+            cell = self.grid[row][col]
+            if 'N' in wall_def:
+                cell.has_wall_north = True
+            if 'E' in wall_def:
+                cell.has_wall_east = True
+            if 'S' in wall_def:
+                cell.has_wall_south = True
+            if 'W' in wall_def:
+                cell.has_wall_west = True
+
+    def _create_empty_grid(self, width, height):
         grid = []
-        # Skip header row
-        for r, line in enumerate(lines[1:]):
+        for r in range(height):
             row = []
-            # Skip row label
-            cells = [c.strip() for c in line.strip().split(',')[1:]]
-            for c, wall_def in enumerate(cells):
+            for c in range(width):
                 cell = Cell(r, c)
-                if 'N' in wall_def:
-                    cell.has_wall_north = True
-                if 'E' in wall_def:
-                    cell.has_wall_east = True
-                if 'S' in wall_def:
-                    cell.has_wall_south = True
-                if 'W' in wall_def:
-                    cell.has_wall_west = True
                 row.append(cell)
             grid.append(row)
         return grid

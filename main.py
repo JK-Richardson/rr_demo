@@ -19,7 +19,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 # Create the board
-board = Board("board.txt")
+board = Board()
 
 # Create robots
 robots = [
@@ -43,13 +43,13 @@ while running:
             
             selected_robot = robots[selected_robot_index]
             if event.key == pygame.K_UP:
-                selected_robot.move(Direction.UP, board)
+                selected_robot.move(Direction.UP, board, robots)
             elif event.key == pygame.K_DOWN:
-                selected_robot.move(Direction.DOWN, board)
+                selected_robot.move(Direction.DOWN, board, robots)
             elif event.key == pygame.K_LEFT:
-                selected_robot.move(Direction.LEFT, board)
+                selected_robot.move(Direction.LEFT, board, robots)
             elif event.key == pygame.K_RIGHT:
-                selected_robot.move(Direction.RIGHT, board)
+                selected_robot.move(Direction.RIGHT, board, robots)
 
     # Fill the screen with white
     screen.fill(WHITE)

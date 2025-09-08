@@ -26,18 +26,36 @@ class Robot:
         self.row = row
         self.col = col
 
-    def move(self, direction, board):
+    def _is_robot_at(self, row, col, all_robots):
+        for robot in all_robots:
+            if robot != self and robot.row == row and robot.col == col:
+                return True
+        return False
+
+    def move(self, direction, board, all_robots):
         if direction == Direction.UP:
             while self.row > 0 and not board.grid[self.row][self.col].has_wall_north and not board.grid[self.row - 1][self.col].has_wall_south:
+                # Check for other robots in the next cell
+                if self._is_robot_at(self.row - 1, self.col, all_robots):
+                    break
                 self.row -= 1
         elif direction == Direction.DOWN:
             while self.row < board.height - 1 and not board.grid[self.row][self.col].has_wall_south and not board.grid[self.row + 1][self.col].has_wall_north:
+                # Check for other robots in the next cell
+                if self._is_robot_at(self.row + 1, self.col, all_robots):
+                    break
                 self.row += 1
         elif direction == Direction.LEFT:
             while self.col > 0 and not board.grid[self.row][self.col].has_wall_west and not board.grid[self.row][self.col - 1].has_wall_east:
+                # Check for other robots in the next cell
+                if self._is_robot_at(self.row, self.col - 1, all_robots):
+                    break
                 self.col -= 1
         elif direction == Direction.RIGHT:
             while self.col < board.width - 1 and not board.grid[self.row][self.col].has_wall_east and not board.grid[self.row][self.col + 1].has_wall_west:
+                # Check for other robots in the next cell
+                if self._is_robot_at(self.row, self.col + 1, all_robots):
+                    break
                 self.col += 1
 
     def draw(self, screen, cell_width, cell_height, buffer):
