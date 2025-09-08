@@ -67,10 +67,13 @@ class BoardValidator:
 
 if __name__ == '__main__':
     import sys
+    import pygame
+
     if len(sys.argv) != 2:
         print("Usage: python board_validator.py <path_to_board.txt>")
         sys.exit(1)
     
+    pygame.init()
     board_file = sys.argv[1]
     try:
         board = Board(board_file)
