@@ -20,7 +20,7 @@ class Board:
         self._load_config_and_place_targets(config_path)
         self.font = pygame.font.SysFont(None, 24)
         self.target_font = pygame.font.SysFont("dejavusans", 32)
-        self.buffer = 20
+        self.buffer = 50
 
     def _load_config_and_place_targets(self, config_path):
         with open(config_path, 'r') as f:
