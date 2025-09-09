@@ -1,5 +1,6 @@
 import pygame
 import yaml
+import random
 from targets import Target, TARGET_COLORS, TargetShape, TARGET_SHAPES
 
 class Cell:
@@ -15,8 +16,8 @@ class Cell:
 class Board:
     def __init__(self, config_path='board.yaml'):
         config = self._load_config(config_path)
-        self.width = config.get('width', 16)  # Default to 16 if not specified
-        self.height = config.get('height', 16) # Default to 16 if not specified
+        self.width = config['width']
+        self.height = config['height']
         self.grid = self._create_empty_grid(self.width, self.height)
 
         self.grid_line_color = tuple(config.get('grid_line_color', [200, 200, 200]))
@@ -27,15 +28,17 @@ class Board:
         self.target_font = pygame.font.SysFont("dejavusans", 32)
         self.buffer = 50
         
-        targets = config.get('targets', {})
-        for target_id, pos in targets.items():
-            try:
-                target = Target(target_id)
-                row, col = pos
-                self.grid[row][col].target = target
-            except (ValueError, IndexError):
-                # Handle invalid target definition or position
-                pass
+        # Randomly assign target coordinates
+        available_coords = [tuple(coord) for coord in config['target_coordinates']]
+        random.shuffle(available_coords)
+
+        all_targets = list(Target) # Get all target enums
+        if len(available_coords) < len(all_targets):
+            raise ValueError("Not enough unique coordinates for all targets.")
+
+        for i, target_enum in enumerate(all_targets):
+            row, col = available_coords[i]
+            self.grid[row][col].target = target_enum
 
         self._apply_walls(config)
 
@@ -54,7 +57,7 @@ class Board:
             self.grid[self.height - 1][c].has_wall_south = True
 
         # Apply internal walls from config
-        walls_config = config.get('walls', {})
+        walls_config = config['walls']
         for coord_str, wall_def in walls_config.items():
             # Convert string key "(row, col)" to tuple (row, col)
             row, col = map(int, coord_str.strip('()').split(','))
