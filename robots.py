@@ -1,5 +1,6 @@
 from enum import Enum
 import pygame
+from board import Board # Import Board for type hinting
 
 class Direction(Enum):
     UP = "UP"
@@ -21,18 +22,18 @@ ROBOT_COLORS = {
 }
 
 class Robot:
-    def __init__(self, color, row, col):
+    def __init__(self, color: RobotColor, row: int, col: int) -> None:
         self.color = color
         self.row = row
         self.col = col
 
-    def _is_robot_at(self, row, col, all_robots):
+    def _is_robot_at(self, row: int, col: int, all_robots: list['Robot']) -> bool:
         for robot in all_robots:
             if robot != self and robot.row == row and robot.col == col:
                 return True
         return False
 
-    def move(self, direction, board, all_robots):
+    def move(self, direction: Direction, board: Board, all_robots: list['Robot']) -> None:
         if direction == Direction.UP:
             while self.row > 0 and not board.grid[self.row][self.col].has_wall_north and not board.grid[self.row - 1][self.col].has_wall_south:
                 # Check for other robots in the next cell
@@ -58,9 +59,9 @@ class Robot:
                     break
                 self.col += 1
 
-    def draw(self, screen, cell_width, cell_height, buffer):
-        x = buffer + self.col * cell_width
-        y = buffer + self.row * cell_height
+    def draw(self, screen: pygame.Surface, cell_width: int, cell_height: int, abs_x: int, abs_y: int) -> None:
+        x = abs_x
+        y = abs_y
         
         # Draw robot body (triangle)
         # Points for an isosceles triangle (base at bottom, apex pointing up)

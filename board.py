@@ -4,7 +4,7 @@ import random
 from targets import Target, TARGET_COLORS, TargetShape, TARGET_SHAPES
 
 class Cell:
-    def __init__(self, row, col):
+    def __init__(self, row: int, col: int) -> None:
         self.row = row
         self.col = col
         self.has_wall_north = False
@@ -13,8 +13,24 @@ class Cell:
         self.has_wall_west = False
         self.target = None
 
+def draw_target_shape(screen: pygame.Surface, target_shape: TargetShape, target_color: tuple[int, int, int], center_x: int, center_y: int, scale: int) -> None:
+    if target_shape == TargetShape.CIRCLE:
+        pygame.draw.circle(screen, target_color, (center_x, center_y), scale // 2)
+    elif target_shape == TargetShape.SQUARE:
+        side = scale // 1.5
+        square_rect = pygame.Rect(center_x - side // 2, center_y - side // 2, side, side)
+        pygame.draw.rect(screen, target_color, square_rect)
+    elif target_shape == TargetShape.TRIANGLE:
+        point1 = (center_x, center_y - scale // 3)
+        point2 = (center_x - scale // 3, center_y + scale // 3)
+        point3 = (center_x + scale // 3, center_y + scale // 3)
+        pygame.draw.polygon(screen, target_color, [point1, point2, point3])
+    elif target_shape == TargetShape.ELLIPSE:
+        ellipse_rect = pygame.Rect(center_x - scale // 3, center_y - scale // 4, 2 * scale // 3, 2 * scale // 4)
+        pygame.draw.ellipse(screen, target_color, ellipse_rect)
+
 class Board:
-    def __init__(self, config_path='board.yaml'):
+    def __init__(self, config_path: str = 'board.yaml') -> None:
         config = self._load_config(config_path)
         self.width = config['width']
         self.height = config['height']
@@ -42,12 +58,12 @@ class Board:
 
         self._apply_walls(config)
 
-    def _load_config(self, config_path):
+    def _load_config(self, config_path: str) -> dict:
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
         return config
 
-    def _apply_walls(self, config):
+    def _apply_walls(self, config: dict) -> None:
         # Apply outer border walls
         for r in range(self.height):
             self.grid[r][0].has_wall_west = True
@@ -71,7 +87,7 @@ class Board:
             if 'W' in wall_def:
                 cell.has_wall_west = True
 
-    def _create_empty_grid(self, width, height):
+    def _create_empty_grid(self, width: int, height: int) -> list[list[Cell]]:
         grid = []
         for r in range(height):
             row = []
@@ -81,7 +97,7 @@ class Board:
             grid.append(row)
         return grid
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
         cell_width = (screen.get_width() - 2 * self.buffer) // self.width
         cell_height = (screen.get_height() - 2 * self.buffer) // self.height
 
@@ -117,22 +133,7 @@ class Board:
                     if shape and color:
                         center_x = x + cell_width // 2
                         center_y = y + cell_height // 2
-                        
-                        if shape == TargetShape.CIRCLE:
-                            pygame.draw.circle(screen, color, (center_x, center_y), cell_width // 3)
-                        elif shape == TargetShape.SQUARE:
-                            side = cell_width // 1.5
-                            square_rect = pygame.Rect(center_x - side // 2, center_y - side // 2, side, side)
-                            pygame.draw.rect(screen, color, square_rect)
-                        elif shape == TargetShape.TRIANGLE:
-                            # Points for an equilateral triangle pointing up
-                            point1 = (center_x, center_y - cell_height // 3)
-                            point2 = (center_x - cell_width // 3, center_y + cell_height // 3)
-                            point3 = (center_x + cell_width // 3, center_y + cell_height // 3)
-                            pygame.draw.polygon(screen, color, [point1, point2, point3])
-                        elif shape == TargetShape.ELLIPSE:
-                            ellipse_rect = pygame.Rect(center_x - cell_width // 3, center_y - cell_height // 4, 2 * cell_width // 3, 2 * cell_height // 4)
-                            pygame.draw.ellipse(screen, color, ellipse_rect)
+                        draw_target_shape(screen, shape, color, center_x, center_y, cell_width)
 
                 if self.show_cell_coords:
                     text = self.font.render(f'{r},{c}', True, (0,0,0))
