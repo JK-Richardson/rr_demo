@@ -1,11 +1,12 @@
-import random
 import logging
-import time # Import time module
+import pathlib
+import random
+import time  # Import time module
 
 import pygame
 
-from board import Board, draw_target_shape, Cell # Import Cell for type hinting
-from common import (  # Import Direction, RobotColor, Target, TARGET_SHAPES, ROBOT_COLORS, TARGET_ROBOT_COLORS, TARGET_COLORS from common.py
+from .board import Board, Cell, draw_target_shape # Import Cell for type hinting
+from .common import (  # Import Direction, RobotColor, Target, TARGET_SHAPES, ROBOT_COLORS, TARGET_ROBOT_COLORS, TARGET_COLORS from common.py
     ROBOT_COLORS,
     TARGET_COLORS,
     TARGET_ROBOT_COLORS,
@@ -14,11 +15,11 @@ from common import (  # Import Direction, RobotColor, Target, TARGET_SHAPES, ROB
     RobotColor,
     Target,
 )
-from robots import Robot
+from .robots import Robot
 
 
 class Game:
-    def __init__(self) -> None:
+    def __init__(self, config_path: pathlib.Path) -> None:
         # Screen dimensions
         self.SCREEN_WIDTH = 800
         self.SCREEN_HEIGHT = 1000  # Increased height for top and bottom gutters
@@ -32,11 +33,11 @@ class Game:
         self.BLACK = (0, 0, 0)
 
         # Create the board
-        self.board: Board = Board()
+        self.board: Board = Board(config_path=config_path)
 
         # Determine available starting positions for robots (not on targets and not in the center)
         available_robot_start_coords: list[tuple[int, int]] = []
-        reserved_cells = [(7, 7), (7, 8), (8, 7), (8, 8)] # Central cells
+        reserved_cells = [(7, 7), (7, 8), (8, 7), (8, 8)]  # Central cells
         for r in range(self.board.height):
             for c in range(self.board.width):
                 if not self.board.grid[r][c].target and (r, c) not in reserved_cells:
@@ -89,12 +90,12 @@ class Game:
                 self.running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if self.show_popup and self.ok_button_rect.collidepoint(event.pos):
-                    self.show_popup = False # Dismiss popup on OK button click
+                    self.show_popup = False  # Dismiss popup on OK button click
                     # TODO: Implement logic for new round after popup dismissal
-                    return # Consume the event
+                    return  # Consume the event
             elif event.type == pygame.KEYDOWN:
                 if self.show_popup:
-                    return # Do not process key presses while popup is active
+                    return  # Do not process key presses while popup is active
 
                 if event.key == pygame.K_1:
                     self.selected_robot_index = 0
@@ -108,7 +109,9 @@ class Game:
                 elif event.key == pygame.K_r:
                     # Reset board
                     for robot in self.robots:
-                        initial_row, initial_col = self.initial_robot_positions[robot.color]
+                        initial_row, initial_col = self.initial_robot_positions[
+                            robot.color
+                        ]
                         robot.row = initial_row
                         robot.col = initial_col
                     self.move_count = 0
@@ -142,8 +145,10 @@ class Game:
                 break
 
         if found_goal_target_cell is None:
-            logging.error(f"Goal target {self.goal_target.value} not found on the board.")
-            return # Exit update if goal target is not found
+            logging.error(
+                f"Goal target {self.goal_target.value} not found on the board."
+            )
+            return  # Exit update if goal target is not found
 
         # Now Pyright knows found_goal_target_cell is not None
         if (
@@ -154,7 +159,9 @@ class Game:
             required_robot_color = TARGET_ROBOT_COLORS.get(self.goal_target)
             if selected_robot.color == required_robot_color:
                 elapsed_time = time.time() - self.start_time
-                logging.info(f"Target {self.goal_target.value} reached by {selected_robot.color.value} robot!")
+                logging.info(
+                    f"Target {self.goal_target.value} reached by {selected_robot.color.value} robot!"
+                )
                 self.show_popup = True
                 self.popup_move_count = self.move_count
                 self.popup_message = f"Good job. You reached the target in {self.popup_move_count} moves in {elapsed_time:.2f} seconds."
@@ -182,8 +189,10 @@ class Game:
 
     def _draw_popup(self) -> None:
         # Draw a semi-transparent background
-        overlay = pygame.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 128)) # Black with 128 alpha (half transparent)
+        overlay = pygame.Surface(
+            (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA
+        )
+        overlay.fill((0, 0, 0, 128))  # Black with 128 alpha (half transparent)
         self.screen.blit(overlay, (0, 0))
 
         # Draw the message box
@@ -191,23 +200,37 @@ class Game:
         box_height = 150
         box_x = (self.SCREEN_WIDTH - box_width) // 2
         box_y = (self.SCREEN_HEIGHT - box_height) // 2
-        pygame.draw.rect(self.screen, self.WHITE, (box_x, box_y, box_width, box_height), 0, 10) # White box with rounded corners
-        pygame.draw.rect(self.screen, self.BLACK, (box_x, box_y, box_width, box_height), 3, 10) # Black border
+        pygame.draw.rect(
+            self.screen, self.WHITE, (box_x, box_y, box_width, box_height), 0, 10
+        )  # White box with rounded corners
+        pygame.draw.rect(
+            self.screen, self.BLACK, (box_x, box_y, box_width, box_height), 3, 10
+        )  # Black border
 
         # Draw the message text
         font = pygame.font.SysFont(None, 40)
         text_surface = font.render(self.popup_message, True, self.BLACK)
-        text_rect = text_surface.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2))
+        text_rect = text_surface.get_rect(
+            center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2)
+        )
         self.screen.blit(text_surface, text_rect)
 
         # Draw OK button
         button_width = 100
         button_height = 40
         button_x = (self.SCREEN_WIDTH - button_width) // 2
-        button_y = self.SCREEN_HEIGHT // 2 + box_height // 2 - button_height - 10 # Position below text
-        self.ok_button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-        pygame.draw.rect(self.screen, (0, 150, 0), self.ok_button_rect, 0, 5) # Green button with rounded corners
-        pygame.draw.rect(self.screen, self.BLACK, self.ok_button_rect, 2, 5) # Black border
+        button_y = (
+            self.SCREEN_HEIGHT // 2 + box_height // 2 - button_height - 10
+        )  # Position below text
+        self.ok_button_rect = pygame.Rect(
+            button_x, button_y, button_width, button_height
+        )
+        pygame.draw.rect(
+            self.screen, (0, 150, 0), self.ok_button_rect, 0, 5
+        )  # Green button with rounded corners
+        pygame.draw.rect(
+            self.screen, self.BLACK, self.ok_button_rect, 2, 5
+        )  # Black border
 
         button_font = pygame.font.SysFont(None, 30)
         button_text = button_font.render("OK", True, self.WHITE)
@@ -239,16 +262,20 @@ class Game:
         # Draw legend in top gutter
         font = pygame.font.SysFont(None, 24)
         legend_x = 10
-        legend_y = top_gutter_height // 2 + 10 # Position below the title
+        legend_y = top_gutter_height // 2 + 10  # Position below the title
         for i, robot_instance in enumerate(self.robots):
             text_color = ROBOT_COLORS[robot_instance.color]
-            text_surface = font.render(f'{i+1}: {robot_instance.color.value}', True, text_color)
+            text_surface = font.render(
+                f"{i + 1}: {robot_instance.color.value}", True, text_color
+            )
             self.screen.blit(text_surface, (legend_x, legend_y))
             legend_x += text_surface.get_width() + 20
 
         # Draw move counter
-        move_text = font.render(f'Moves: {self.move_count}', True, self.BLACK)
-        self.screen.blit(move_text, (legend_x + 50, legend_y)) # Position next to legend
+        move_text = font.render(f"Moves: {self.move_count}", True, self.BLACK)
+        self.screen.blit(
+            move_text, (legend_x + 50, legend_y)
+        )  # Position next to legend
 
     def _draw_board_area(self, board_draw_height: int, top_gutter_height: int) -> None:
         board_surface = pygame.Surface((self.SCREEN_WIDTH, board_draw_height))
@@ -286,7 +313,9 @@ class Game:
 
         # Draw Reset instruction
         reset_text = font.render("R: reset", True, self.BLACK)
-        self.screen.blit(reset_text, (self.SCREEN_WIDTH - reset_text.get_width() - 10, gutter_y + 10))
+        self.screen.blit(
+            reset_text, (self.SCREEN_WIDTH - reset_text.get_width() - 10, gutter_y + 10)
+        )
 
         # Draw the goal target shape and color
         target_shape = TARGET_SHAPES.get(self.goal_target)
