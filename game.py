@@ -3,8 +3,8 @@ import random
 import pygame
 
 from board import Board, draw_target_shape
-from robots import ROBOT_COLORS, Direction, Robot, RobotColor
-from targets import TARGET_COLORS, TARGET_SHAPES, Target
+from robots import Robot
+from common import Direction, RobotColor, Target, TARGET_SHAPES, ROBOT_COLORS, TARGET_ROBOT_COLORS, TARGET_COLORS # Import Direction, RobotColor, Target, TARGET_SHAPES, ROBOT_COLORS, TARGET_ROBOT_COLORS, TARGET_COLORS from common.py
 
 
 class Game:
@@ -83,8 +83,23 @@ class Game:
                     selected_robot.move(Direction.RIGHT, self.board, self.robots)
 
     def _update(self) -> None:
-        # Game logic updates (e.g., check for win conditions, animations)
-        pass
+        # Check if the selected robot reached the goal target
+        selected_robot = self.robots[self.selected_robot_index]
+        goal_target_cell = None
+        for r in range(self.board.height):
+            for c in range(self.board.width):
+                if self.board.grid[r][c].target == self.goal_target:
+                    goal_target_cell = self.board.grid[r][c]
+                    break
+            if goal_target_cell:
+                break
+
+        if goal_target_cell and selected_robot.row == goal_target_cell.row and selected_robot.col == goal_target_cell.col:
+            # Check if the correct color robot reached the target
+            required_robot_color = TARGET_ROBOT_COLORS.get(self.goal_target)
+            if selected_robot.color == required_robot_color:
+                print(f"Target {self.goal_target.value} reached by {selected_robot.color.value} robot!")
+                # TODO: Implement logic for new round (new target, reset robots, etc.)
 
     def _draw(self) -> None:
         self.screen.fill(self.WHITE)

@@ -1,25 +1,6 @@
-from enum import Enum
 import pygame
 from board import Board # Import Board for type hinting
-
-class Direction(Enum):
-    UP = "UP"
-    DOWN = "DOWN"
-    LEFT = "LEFT"
-    RIGHT = "RIGHT"
-
-class RobotColor(Enum):
-    RED = "RED"
-    BLUE = "BLUE"
-    GREEN = "GREEN"
-    YELLOW = "YELLOW"
-
-ROBOT_COLORS = {
-    RobotColor.RED: (255, 0, 0),
-    RobotColor.BLUE: (0, 0, 255),
-    RobotColor.GREEN: (0, 255, 0),
-    RobotColor.YELLOW: (255, 255, 0),
-}
+from common import Direction, RobotColor, ROBOT_COLORS # Import Direction, RobotColor, ROBOT_COLORS from common.py
 
 class Robot:
     def __init__(self, color: RobotColor, row: int, col: int) -> None:

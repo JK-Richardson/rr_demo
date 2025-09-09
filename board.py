@@ -1,7 +1,7 @@
 import pygame
 import yaml
 import random
-from targets import Target, TARGET_COLORS, TargetShape, TARGET_SHAPES
+from common import Target, TargetShape, TARGET_SHAPES, TARGET_COLORS # Import Target, TargetShape, TARGET_SHAPES, TARGET_COLORS from common.py
 
 class Cell:
     def __init__(self, row: int, col: int) -> None:

@@ -1,5 +1,24 @@
 from enum import Enum
 
+class Direction(Enum):
+    UP = "UP"
+    DOWN = "DOWN"
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
+
+class RobotColor(Enum):
+    RED = "RED"
+    BLUE = "BLUE"
+    GREEN = "GREEN"
+    YELLOW = "YELLOW"
+
+ROBOT_COLORS = {
+    RobotColor.RED: (255, 0, 0),
+    RobotColor.BLUE: (0, 0, 255),
+    RobotColor.GREEN: (0, 255, 0),
+    RobotColor.YELLOW: (255, 255, 0),
+}
+
 class Target(Enum):
     RED_CIRCLE = "RED_CIRCLE"
     RED_SQUARE = "RED_SQUARE"
@@ -69,4 +88,26 @@ TARGET_COLORS = {
     Target.YELLOW_SQUARE: (255, 255, 0),
     Target.YELLOW_TRIANGLE: (255, 255, 0),
     Target.YELLOW_ELLIPSE: (255, 255, 0),
+}
+
+TARGET_ROBOT_COLORS = {
+    Target.RED_CIRCLE: RobotColor.RED,
+    Target.RED_SQUARE: RobotColor.RED,
+    Target.RED_TRIANGLE: RobotColor.RED,
+    Target.RED_ELLIPSE: RobotColor.RED,
+
+    Target.BLUE_CIRCLE: RobotColor.BLUE,
+    Target.BLUE_SQUARE: RobotColor.BLUE,
+    Target.BLUE_TRIANGLE: RobotColor.BLUE,
+    Target.BLUE_ELLIPSE: RobotColor.BLUE,
+
+    Target.GREEN_CIRCLE: RobotColor.GREEN,
+    Target.GREEN_SQUARE: RobotColor.GREEN,
+    Target.GREEN_TRIANGLE: RobotColor.GREEN,
+    Target.GREEN_ELLIPSE: RobotColor.GREEN,
+
+    Target.YELLOW_CIRCLE: RobotColor.YELLOW,
+    Target.YELLOW_SQUARE: RobotColor.YELLOW,
+    Target.YELLOW_TRIANGLE: RobotColor.YELLOW,
+    Target.YELLOW_ELLIPSE: RobotColor.YELLOW,
 }
