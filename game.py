@@ -1,9 +1,10 @@
 import random
 import logging
+import time # Import time module
 
 import pygame
 
-from board import Board, draw_target_shape
+from board import Board, draw_target_shape, Cell # Import Cell for type hinting
 from common import (  # Import Direction, RobotColor, Target, TARGET_SHAPES, ROBOT_COLORS, TARGET_ROBOT_COLORS, TARGET_COLORS from common.py
     ROBOT_COLORS,
     TARGET_COLORS,
@@ -31,13 +32,14 @@ class Game:
         self.BLACK = (0, 0, 0)
 
         # Create the board
-        self.board = Board()
+        self.board: Board = Board()
 
-        # Determine available starting positions for robots (not on targets)
-        available_robot_start_coords = []
+        # Determine available starting positions for robots (not on targets and not in the center)
+        available_robot_start_coords: list[tuple[int, int]] = []
+        reserved_cells = [(7, 7), (7, 8), (8, 7), (8, 8)] # Central cells
         for r in range(self.board.height):
             for c in range(self.board.width):
-                if not self.board.grid[r][c].target:
+                if not self.board.grid[r][c].target and (r, c) not in reserved_cells:
                     available_robot_start_coords.append((r, c))
         random.shuffle(available_robot_start_coords)
 
@@ -69,6 +71,9 @@ class Game:
 
         # Initialize move counter
         self.move_count = 0
+
+        # Initialize game start time
+        self.start_time = time.time()
 
         # Game loop control
         self.running = True
@@ -125,27 +130,34 @@ class Game:
     def _update(self) -> None:
         # Check if the selected robot reached the goal target
         selected_robot = self.robots[self.selected_robot_index]
-        goal_target_cell = None
+
+        found_goal_target_cell: Cell | None = None
         for r in range(self.board.height):
             for c in range(self.board.width):
-                if self.board.grid[r][c].target == self.goal_target:
-                    goal_target_cell = self.board.grid[r][c]
+                cell_target = self.board.grid[r][c].target
+                if cell_target is not None and cell_target == self.goal_target:
+                    found_goal_target_cell = self.board.grid[r][c]
                     break
-            if goal_target_cell:
+            if found_goal_target_cell:
                 break
 
+        if found_goal_target_cell is None:
+            logging.error(f"Goal target {self.goal_target.value} not found on the board.")
+            return # Exit update if goal target is not found
+
+        # Now Pyright knows found_goal_target_cell is not None
         if (
-            goal_target_cell
-            and selected_robot.row == goal_target_cell.row
-            and selected_robot.col == goal_target_cell.col
+            selected_robot.row == found_goal_target_cell.row
+            and selected_robot.col == found_goal_target_cell.col
         ):
             # Check if the correct color robot reached the target
             required_robot_color = TARGET_ROBOT_COLORS.get(self.goal_target)
             if selected_robot.color == required_robot_color:
+                elapsed_time = time.time() - self.start_time
                 logging.info(f"Target {self.goal_target.value} reached by {selected_robot.color.value} robot!")
                 self.show_popup = True
                 self.popup_move_count = self.move_count
-                self.popup_message = f"Good job. You reached the target in {self.popup_move_count} moves."
+                self.popup_message = f"Good job. You reached the target in {self.popup_move_count} moves in {elapsed_time:.2f} seconds."
                 # TODO: Implement logic for new round (new target, reset robots, etc.)
 
     def _draw(self) -> None:

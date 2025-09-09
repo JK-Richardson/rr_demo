@@ -1,6 +1,7 @@
 import pygame
 import yaml
 import random
+from typing import Any # Import Any for type hinting
 from common import Target, TargetShape, TARGET_SHAPES, TARGET_COLORS # Import Target, TargetShape, TARGET_SHAPES, TARGET_COLORS from common.py
 
 class Cell:
@@ -32,13 +33,13 @@ def draw_target_shape(screen: pygame.Surface, target_shape: TargetShape, target_
 class Board:
     def __init__(self, config_path: str = 'board.yaml') -> None:
         config = self._load_config(config_path)
-        self.width = config['width']
-        self.height = config['height']
-        self.grid = self._create_empty_grid(self.width, self.height)
+        self.width: int = config['width']
+        self.height: int = config['height']
+        self.grid: list[list[Cell]] = self._create_empty_grid(self.width, self.height)
 
-        self.grid_line_color = tuple(config.get('grid_line_color', [200, 200, 200]))
-        self.wall_color = tuple(config.get('wall_color', [255, 0, 0]))
-        self.show_cell_coords = config.get('show_cell_coords', False)
+        self.grid_line_color: tuple[int, int, int] = tuple(config.get('grid_line_color', [200, 200, 200]))
+        self.wall_color: tuple[int, int, int] = tuple(config.get('wall_color', [255, 0, 0]))
+        self.show_cell_coords: bool = config.get('show_cell_coords', False)
 
         self.font = pygame.font.SysFont(None, 24)
         self.target_font = pygame.font.SysFont("dejavusans", 32)
@@ -58,12 +59,12 @@ class Board:
 
         self._apply_walls(config)
 
-    def _load_config(self, config_path: str) -> dict:
+    def _load_config(self, config_path: str) -> dict[str, Any]:
         with open(config_path, 'r') as f:
-            config = yaml.safe_load(f)
+            config: dict[str, Any] = yaml.safe_load(f)
         return config
 
-    def _apply_walls(self, config: dict) -> None:
+    def _apply_walls(self, config: dict[str, Any]) -> None:
         # Apply outer border walls
         for r in range(self.height):
             self.grid[r][0].has_wall_west = True
@@ -88,9 +89,9 @@ class Board:
                 cell.has_wall_west = True
 
     def _create_empty_grid(self, width: int, height: int) -> list[list[Cell]]:
-        grid = []
+        grid: list[list[Cell]] = []
         for r in range(height):
-            row = []
+            row: list[Cell] = []
             for c in range(width):
                 cell = Cell(r, c)
                 row.append(cell)
@@ -98,14 +99,14 @@ class Board:
         return grid
 
     def draw(self, screen: pygame.Surface) -> None:
-        cell_width = (screen.get_width() - 2 * self.buffer) // self.width
-        cell_height = (screen.get_height() - 2 * self.buffer) // self.height
+        cell_width: int = (screen.get_width() - 2 * self.buffer) // self.width
+        cell_height: int = (screen.get_height() - 2 * self.buffer) // self.height
 
         # Draw grid lines
         for r in range(self.height):
             for c in range(self.width):
-                x = self.buffer + c * cell_width
-                y = self.buffer + r * cell_height
+                x: int = self.buffer + c * cell_width
+                y: int = self.buffer + r * cell_height
                 # Draw horizontal grid line
                 pygame.draw.line(screen, self.grid_line_color, (x, y), (x + cell_width, y), 1)
                 # Draw vertical grid line
@@ -128,13 +129,13 @@ class Board:
                     pygame.draw.line(screen, self.wall_color, (x, y), (x, y + cell_height), 4)
                 
                 if cell.target:
-                    shape = TARGET_SHAPES.get(cell.target)
-                    color = TARGET_COLORS.get(cell.target)
+                    shape: TargetShape | None = TARGET_SHAPES.get(cell.target)
+                    color: tuple[int, int, int] | None = TARGET_COLORS.get(cell.target)
                     if shape and color:
-                        center_x = x + cell_width // 2
-                        center_y = y + cell_height // 2
+                        center_x: int = x + cell_width // 2
+                        center_y: int = y + cell_height // 2
                         draw_target_shape(screen, shape, color, center_x, center_y, cell_width)
 
                 if self.show_cell_coords:
-                    text = self.font.render(f'{r},{c}', True, (0,0,0))
+                    text: pygame.Surface = self.font.render(f'{r},{c}', True, (0,0,0))
                     screen.blit(text, (x + 5, y + 5))
