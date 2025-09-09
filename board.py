@@ -1,6 +1,6 @@
 import pygame
 import yaml
-from targets import Target, TARGET_SYMBOLS, TARGET_COLORS
+from targets import Target, TARGET_COLORS, TargetShape, TARGET_SHAPES
 
 class Cell:
     def __init__(self, row, col):
@@ -109,12 +109,27 @@ class Board:
                     pygame.draw.line(screen, self.wall_color, (x, y), (x, y + cell_height), 4)
                 
                 if cell.target:
-                    symbol = TARGET_SYMBOLS.get(cell.target)
+                    shape = TARGET_SHAPES.get(cell.target)
                     color = TARGET_COLORS.get(cell.target)
-                    if symbol and color:
-                        text = self.target_font.render(symbol, True, color)
-                        text_rect = text.get_rect(center=(x + cell_width // 2, y + cell_height // 2))
-                        screen.blit(text, text_rect)
+                    if shape and color:
+                        center_x = x + cell_width // 2
+                        center_y = y + cell_height // 2
+                        
+                        if shape == TargetShape.CIRCLE:
+                            pygame.draw.circle(screen, color, (center_x, center_y), cell_width // 3)
+                        elif shape == TargetShape.SQUARE:
+                            side = cell_width // 1.5
+                            square_rect = pygame.Rect(center_x - side // 2, center_y - side // 2, side, side)
+                            pygame.draw.rect(screen, color, square_rect)
+                        elif shape == TargetShape.TRIANGLE:
+                            # Points for an equilateral triangle pointing up
+                            point1 = (center_x, center_y - cell_height // 3)
+                            point2 = (center_x - cell_width // 3, center_y + cell_height // 3)
+                            point3 = (center_x + cell_width // 3, center_y + cell_height // 3)
+                            pygame.draw.polygon(screen, color, [point1, point2, point3])
+                        elif shape == TargetShape.ELLIPSE:
+                            ellipse_rect = pygame.Rect(center_x - cell_width // 3, center_y - cell_height // 4, 2 * cell_width // 3, 2 * cell_height // 4)
+                            pygame.draw.ellipse(screen, color, ellipse_rect)
 
                 if self.show_cell_coords:
                     text = self.font.render(f'{r},{c}', True, (0,0,0))

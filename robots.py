@@ -68,8 +68,10 @@ class Robot:
         point2 = (x + cell_width // 3, y + 2 * cell_height // 3) # Bottom-left
         point3 = (x + 2 * cell_width // 3, y + 2 * cell_height // 3) # Bottom-right
         pygame.draw.polygon(screen, ROBOT_COLORS[self.color], [point1, point2, point3])
+        pygame.draw.polygon(screen, (0, 0, 0), [point1, point2, point3], 2) # Black border
 
         # Draw robot head (circle)
         head_x = x + cell_width // 2
         head_y = y + cell_height // 3
         pygame.draw.circle(screen, ROBOT_COLORS[self.color], (head_x, head_y), cell_width // 7)
+        pygame.draw.circle(screen, (0, 0, 0), (head_x, head_y), cell_width // 7, 2) # Black border
