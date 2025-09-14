@@ -5,7 +5,7 @@ import time  # Import time module
 
 import pygame
 
-from .board import Board, Cell, draw_target_shape # Import Cell for type hinting
+from .board import Board, Cell, draw_target_shape  # Import Cell for type hinting
 from .common import (  # Import Direction, RobotColor, Target, TARGET_SHAPES, ROBOT_COLORS, TARGET_ROBOT_COLORS, TARGET_COLORS from common.py
     ROBOT_COLORS,
     TARGET_COLORS,
@@ -75,6 +75,7 @@ class Game:
 
         # Initialize game start time
         self.start_time = time.time()
+        self.elapsed_time: float | None = None
 
         # Game loop control
         self.running = True
@@ -158,13 +159,14 @@ class Game:
             # Check if the correct color robot reached the target
             required_robot_color = TARGET_ROBOT_COLORS.get(self.goal_target)
             if selected_robot.color == required_robot_color:
-                elapsed_time = time.time() - self.start_time
+                if self.elapsed_time is None:  # Only set elapsed_time once
+                    self.elapsed_time = time.time() - self.start_time
                 logging.info(
                     f"Target {self.goal_target.value} reached by {selected_robot.color.value} robot!"
                 )
                 self.show_popup = True
                 self.popup_move_count = self.move_count
-                self.popup_message = f"Good job. You reached the target in {self.popup_move_count} moves in {elapsed_time:.2f} seconds."
+                self.popup_message = f"Good job. You reached the target in {self.popup_move_count} moves in {self.elapsed_time:.2f} seconds."
                 # TODO: Implement logic for new round (new target, reset robots, etc.)
 
     def _draw(self) -> None:
