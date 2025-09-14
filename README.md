@@ -4,6 +4,50 @@ This project is a Python implementation of the board game "Ricochet Robots," bui
 
 NB: This was created as a learning project and not for any commercial use.
 
+## Getting Started
+
+To run this project locally, you'll need to have Python 3.12+ and `uv` installed.
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/your-username/rr_demo.git
+    cd rr_demo
+    ```
+
+2.  **Create a virtual environment and install dependencies:**
+
+    ```bash
+    uv venv
+    uv sync
+    ```
+
+3.  **Run the game:**
+
+    ```bash
+    uv run python main.py
+    ```
+
+## Building from Source
+
+If you want to create a standalone executable that can be run without installing Python or any dependencies, you can build it using PyInstaller.
+
+1.  **Install development dependencies:**
+
+    Make sure you have completed the "Getting Started" steps first, then run:
+
+    ```bash
+    uv sync --dev
+    ```
+
+2.  **Build the executable:**
+
+    ```bash
+    uv run build
+    ```
+
+    This will create a single executable file in the `dist` directory.
+
 ## How to Play
 
 The goal of the game is to move the robots on the board to reach a specific target cell. The robots move in a straight line until they hit a wall or another robot.
