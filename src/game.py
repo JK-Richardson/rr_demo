@@ -26,7 +26,7 @@ class Game:
 
         # Create the screen
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
-        pygame.display.set_caption("Ricochet Robots")
+        pygame.display.set_caption("RR_DEMO")
 
         # Colors
         self.WHITE = (255, 255, 255)
@@ -254,7 +254,7 @@ class Game:
     def _draw_game_title(self, top_gutter_height: int) -> None:
         # Draw Game Title in top gutter
         title_font = pygame.font.SysFont(None, 48)
-        title_text = title_font.render("Ricochet Robots", True, self.BLACK)
+        title_text = title_font.render("RR_DEMO", True, self.BLACK)
         title_rect = title_text.get_rect(
             center=(self.SCREEN_WIDTH // 2, top_gutter_height // 3)
         )

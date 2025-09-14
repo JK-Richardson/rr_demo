@@ -37,16 +37,16 @@ If you want to create a standalone executable that can be run without installing
     Make sure you have completed the "Getting Started" steps first, then run:
 
     ```bash
-    uv sync --dev
+    uv sync --all-extras
     ```
 
 2.  **Build the executable:**
 
     ```bash
-    uv run build
+    uv run pyinstaller --onefile --name rr_demo main.py
     ```
 
-    This will create a single executable file in the `dist` directory.
+    This will create a single executable file named `rr_demo` in the `dist` directory.
 
 ## How to Play
 
