@@ -58,6 +58,7 @@ class Board:
         self.width: int = config["width"]
         self.height: int = config["height"]
         self.grid: list[list[Cell]] = self._create_empty_grid(self.width, self.height)
+        self._target_lookup: dict[Target, tuple[int, int]] = {}
 
         self.grid_line_color: tuple[int, int, int] = tuple(
             config.get("grid_line_color", [200, 200, 200])
@@ -82,8 +83,13 @@ class Board:
         for i, target_enum in enumerate(all_targets):
             row, col = available_coords[i]
             self.grid[row][col].target = target_enum
+            self._target_lookup[target_enum] = (row, col)
 
         self._apply_walls(config)
+
+    def get_target_coords(self, target: Target) -> tuple[int, int]:
+        """Returns (row, col) for the given target"""
+        return self._target_lookup[target]
 
     def _load_config(self, config_path: pathlib.Path) -> dict[str, Any]:
         with open(config_path, "r") as f:

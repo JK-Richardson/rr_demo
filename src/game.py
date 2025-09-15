@@ -5,7 +5,7 @@ import time  # Import time module
 
 import pygame
 
-from .board import Board, Cell, draw_target_shape  # Import Cell for type hinting
+from .board import Board, draw_target_shape  # Import Cell for type hinting
 from .common import (  # Import Direction, RobotColor, Target, TARGET_SHAPES, ROBOT_COLORS, TARGET_ROBOT_COLORS, TARGET_COLORS from common.py
     ROBOT_COLORS,
     TARGET_COLORS,
@@ -70,6 +70,9 @@ class Game:
         # Select a random goal target
         self.goal_target = random.choice(list(Target))
 
+        self.target_cell_coords = self.board.get_target_coords(self.goal_target)
+        """(row, col) of the target cell"""
+
         # Initialize move counter
         self.move_count = 0
 
@@ -84,6 +87,21 @@ class Game:
         self.show_popup = False
         self.popup_message = ""
         self.popup_move_count = 0
+
+    @property
+    def target_robot_color(self) -> RobotColor:
+        return TARGET_ROBOT_COLORS[self.goal_target]
+
+    @property
+    def target_robot(self) -> Robot:
+        target_robot_color = self.target_robot_color
+        target_robots = [
+            robot for robot in self.robots if robot.color == target_robot_color
+        ]
+        assert len(target_robots) == 1, (
+            f"Illegal number of target robots, {target_robots}, {self.goal_target.value}"
+        )
+        return target_robots[0]
 
     def _handle_input(self) -> None:
         for event in pygame.event.get():
@@ -131,43 +149,23 @@ class Game:
                     selected_robot.move(Direction.RIGHT, self.board, self.robots)
                     self.move_count += 1
 
+    def is_goal_target_reached(self) -> bool:
+        """Check if the goal target has been reached by the correct robot."""
+        return (self.target_robot.row, self.target_robot.col) == self.target_cell_coords
+
     def _update(self) -> None:
-        # Check if the selected robot reached the goal target
-        selected_robot = self.robots[self.selected_robot_index]
-
-        found_goal_target_cell: Cell | None = None
-        for r in range(self.board.height):
-            for c in range(self.board.width):
-                cell_target = self.board.grid[r][c].target
-                if cell_target is not None and cell_target == self.goal_target:
-                    found_goal_target_cell = self.board.grid[r][c]
-                    break
-            if found_goal_target_cell:
-                break
-
-        if found_goal_target_cell is None:
-            logging.error(
-                f"Goal target {self.goal_target.value} not found on the board."
+        # Check if the target has been reached
+        target_reached = self.is_goal_target_reached()
+        if target_reached:
+            if self.elapsed_time is None:  # Only set elapsed_time once
+                self.elapsed_time = time.time() - self.start_time
+            logging.info(
+                f"Target {self.goal_target.value} reached by {self.target_robot.color.value} robot!"
             )
-            return  # Exit update if goal target is not found
-
-        # Now Pyright knows found_goal_target_cell is not None
-        if (
-            selected_robot.row == found_goal_target_cell.row
-            and selected_robot.col == found_goal_target_cell.col
-        ):
-            # Check if the correct color robot reached the target
-            required_robot_color = TARGET_ROBOT_COLORS.get(self.goal_target)
-            if selected_robot.color == required_robot_color:
-                if self.elapsed_time is None:  # Only set elapsed_time once
-                    self.elapsed_time = time.time() - self.start_time
-                logging.info(
-                    f"Target {self.goal_target.value} reached by {selected_robot.color.value} robot!"
-                )
-                self.show_popup = True
-                self.popup_move_count = self.move_count
-                self.popup_message = f"Good job. You reached the target in {self.popup_move_count} moves in {self.elapsed_time:.2f} seconds."
-                # TODO: Implement logic for new round (new target, reset robots, etc.)
+            self.show_popup = True
+            self.popup_move_count = self.move_count
+            self.popup_message = f"Good job. You reached the target in {self.popup_move_count} moves in {self.elapsed_time:.2f} seconds."
+        # TODO: Implement logic for new round (new target, reset robots, etc.)
 
     def _draw(self) -> None:
         self.screen.fill(self.WHITE)
