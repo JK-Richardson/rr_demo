@@ -1,14 +1,14 @@
+import argparse
 import pathlib
 import random
 
 import pygame
 
+import src.solver as solver
 from src.game import Game
 from src.utils import setup_logging
 
 if __name__ == "__main__":
-    import argparse
-
     setup_logging()
     parser = argparse.ArgumentParser(description="Ricochet Robots Demo")
     parser.add_argument(
@@ -30,10 +30,7 @@ if __name__ == "__main__":
     pygame.init()
     game = Game(config_path=pathlib.Path("./board.yaml"))
     if args.solve:
-        # Call your solve function here, e.g. game.solve()
         print(f"Solving the board... (seed={args.seed})")
-        import src.solver as solver
-
         solver_instance = solver.Solver(game)
         solution = solver_instance.solve()
         print("Solution found:", solution)
