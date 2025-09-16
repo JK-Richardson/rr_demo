@@ -68,8 +68,6 @@ class Board:
         )
         self.show_cell_coords: bool = config.get("show_cell_coords", False)
 
-        self.font = pygame.font.SysFont(None, 24)
-        self.target_font = pygame.font.SysFont("dejavusans", 32)
         self.buffer = 50
 
         # Randomly assign target coordinates
@@ -191,5 +189,6 @@ class Board:
                         )
 
                 if self.show_cell_coords:
-                    text: pygame.Surface = self.font.render(f"{r},{c}", True, (0, 0, 0))
+                    _font = pygame.font.SysFont(None, 24)
+                    text: pygame.Surface = _font.render(f"{r},{c}", True, (0, 0, 0))
                     screen.blit(text, (x + 5, y + 5))

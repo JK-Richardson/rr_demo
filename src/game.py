@@ -24,10 +24,6 @@ class Game:
         self.SCREEN_WIDTH = 800
         self.SCREEN_HEIGHT = 1000  # Increased height for top and bottom gutters
 
-        # Create the screen
-        self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
-        pygame.display.set_caption("RR_DEMO")
-
         # Colors
         self.WHITE = (255, 255, 255)
         self.BLACK = (0, 0, 0)
@@ -75,13 +71,6 @@ class Game:
 
         # Initialize move counter
         self.move_count = 0
-
-        # Initialize game start time
-        self.start_time = time.time()
-        self.elapsed_time: float | None = None
-
-        # Game loop control
-        self.running = True
 
         # Pop-up message control
         self.show_popup = False
@@ -336,6 +325,15 @@ class Game:
             )
 
     def run(self) -> None:
+        # Create the screen
+        self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        pygame.display.set_caption("RR_DEMO")
+        # Initialize game start time
+        self.start_time = time.time()
+        self.elapsed_time: float | None = None
+
+        # Game loop control
+        self.running = True
         while self.running:
             self._handle_input()
             self._update()
