@@ -1,6 +1,6 @@
 import pygame
 
-from .board import Board # Import Board for type hinting
+from .board import Board  # Import Board for type hinting
 from .common import (  # Import Direction, RobotColor, ROBOT_COLORS from common.py
     ROBOT_COLORS,
     Direction,
@@ -19,6 +19,9 @@ class Robot:
             if robot != self and robot.row == row and robot.col == col:
                 return True
         return False
+
+    def get_position(self) -> tuple[int, int]:
+        return self.row, self.col
 
     def move(
         self, direction: Direction, board: Board, all_robots: list["Robot"]
