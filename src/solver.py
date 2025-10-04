@@ -51,6 +51,12 @@ class RobotContainer:
         self.green_robot.row, self.green_robot.col = state.GREEN
         self.yellow_robot.row, self.yellow_robot.col = state.YELLOW
 
+    def get_robots_copy(self) -> list[Robot]:
+        """
+        Returns a deep copy of the robots, ensuring their state is consistent.
+        """
+        return copy.deepcopy(self.robots)
+
 
 class Solver:
     def __init__(self, game: Game) -> None:
@@ -75,7 +81,6 @@ class Solver:
         Returns a Solution object with the path to the goal (if found).
         """
         robot_container = self.robot_container
-        robots = robot_container.robots
         game = self.game
         initial_state = robot_container.get_state()
         self.visited: set[State] = set()
@@ -88,14 +93,16 @@ class Solver:
             state, path = self.queue.popleft()
             robot_container.apply_state(state)
 
-            if self.is_goal_state(game=self.game, robots=robots):
+            if self.is_goal_state(game=self.game, robots=robot_container.robots):
                 self.solution_path = path
                 solution = Solution(moves=path)
                 break
 
             # For each robot, try each direction
-            for robot_idx, robot in enumerate(robots):
+            for robot_idx, _ in enumerate(robot_container.robots):
                 for direction in Direction:
+                    robots = robot_container.get_robots_copy()
+                    robot = robots[robot_idx]
                     # Move the robot
                     robot.move(direction, game.board, robots)
                     new_state = robot_container.get_state()
