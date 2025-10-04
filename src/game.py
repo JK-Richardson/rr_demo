@@ -19,7 +19,12 @@ from .robots import Robot
 
 
 class Game:
-    def __init__(self, config_path: pathlib.Path) -> None:
+    def __init__(
+        self,
+        config_path: pathlib.Path,
+        initial_robot_positions: dict[RobotColor, tuple[int, int]] | None = None,
+        goal_target: Target | None = None,
+    ) -> None:
         # Screen dimensions
         self.SCREEN_WIDTH = 800
         self.SCREEN_HEIGHT = 1000  # Increased height for top and bottom gutters
@@ -31,15 +36,6 @@ class Game:
         # Create the board
         self.board: Board = Board(config_path=config_path)
 
-        # Determine available starting positions for robots (not on targets and not in the center)
-        available_robot_start_coords: list[tuple[int, int]] = []
-        reserved_cells = [(7, 7), (7, 8), (8, 7), (8, 8)]  # Central cells
-        for r in range(self.board.height):
-            for c in range(self.board.width):
-                if not self.board.grid[r][c].target and (r, c) not in reserved_cells:
-                    available_robot_start_coords.append((r, c))
-        random.shuffle(available_robot_start_coords)
-
         # Create robots and assign random starting positions
         robot_colors = [
             RobotColor.RED,
@@ -47,24 +43,36 @@ class Game:
             RobotColor.GREEN,
             RobotColor.YELLOW,
         ]
+        self.initial_robot_positions: dict[RobotColor, tuple[int, int]]
         self.robots: list[Robot] = []
-        self.initial_robot_positions: dict[RobotColor, tuple[int, int]] = {}
-        for i, color in enumerate(robot_colors):
-            if i < len(available_robot_start_coords):
-                row, col = available_robot_start_coords[i]
-                robot = Robot(color, row, col)
-                self.robots.append(robot)
-                self.initial_robot_positions[color] = (row, col)
-            else:
-                # Handle case where there aren't enough unique spots for all robots
-                logging.warning(
-                    f"Not enough unique starting positions for all robots. Robot {color.value} not placed."
-                )
+
+        if initial_robot_positions:
+            self.initial_robot_positions = initial_robot_positions
+            for color, pos in initial_robot_positions.items():
+                self.robots.append(Robot(color, pos[0], pos[1]))
+        else:
+            # Determine available starting positions for robots (not on targets and not in the center)
+            available_robot_start_coords: list[tuple[int, int]] = []
+            reserved_cells = [(7, 7), (7, 8), (8, 7), (8, 8)]  # Central cells
+            for r in range(self.board.height):
+                for c in range(self.board.width):
+                    if not self.board.grid[r][c].target and (r, c) not in reserved_cells:
+                        available_robot_start_coords.append((r, c))
+            random.shuffle(available_robot_start_coords)
+
+            self.initial_robot_positions = {}
+            for i, color in enumerate(robot_colors):
+                if i < len(available_robot_start_coords):
+                    row, col = available_robot_start_coords[i]
+                    self.robots.append(Robot(color, row, col))
+                    self.initial_robot_positions[color] = (row, col)
+                else:
+                    logging.warning(f"Not enough starting positions for {color.value}.")
 
         self.selected_robot_index = 0
 
         # Select a random goal target
-        self.goal_target = random.choice(list(Target))
+        self.goal_target = goal_target or random.choice(list(Target))
 
         self.target_cell_coords = self.board.get_target_coords(self.goal_target)
         """(row, col) of the target cell"""

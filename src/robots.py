@@ -44,7 +44,8 @@ class Robot:
             robot_rows = [r for r, c in other_robots_pos if c == self.col and r < self.row]
             robot_stop_row = max(robot_rows) if robot_rows else -1
 
-            self.row = max(wall_stop_row, robot_stop_row + 1)
+            final_robot_stop = robot_stop_row + 1 if robot_stop_row != -1 else 0
+            self.row = max(wall_stop_row, final_robot_stop)
 
         elif direction == Direction.DOWN:
             path_df = df[(df["col"] == self.col) & (df["row"] > self.row) & (df["wall_south"] == 1)]
@@ -54,7 +55,8 @@ class Robot:
             robot_rows = [r for r, c in other_robots_pos if c == self.col and r > self.row]
             robot_stop_row = min(robot_rows) if robot_rows else board.height
 
-            self.row = min(wall_stop_row, robot_stop_row - 1)
+            final_robot_stop = robot_stop_row - 1 if robot_stop_row != board.height else board.height - 1
+            self.row = min(wall_stop_row, final_robot_stop)
 
         elif direction == Direction.LEFT:
             path_df = df[(df["row"] == self.row) & (df["col"] < self.col) & (df["wall_west"] == 1)]
@@ -64,7 +66,8 @@ class Robot:
             robot_cols = [c for r, c in other_robots_pos if r == self.row and c < self.col]
             robot_stop_col = max(robot_cols) if robot_cols else -1
 
-            self.col = max(wall_stop_col, robot_stop_col + 1)
+            final_robot_stop = robot_stop_col + 1 if robot_stop_col != -1 else 0
+            self.col = max(wall_stop_col, final_robot_stop)
 
         elif direction == Direction.RIGHT:
             path_df = df[(df["row"] == self.row) & (df["col"] > self.col) & (df["wall_east"] == 1)]
@@ -74,7 +77,8 @@ class Robot:
             robot_cols = [c for r, c in other_robots_pos if r == self.row and c > self.col]
             robot_stop_col = min(robot_cols) if robot_cols else board.width
 
-            self.col = min(wall_stop_col, robot_stop_col - 1)
+            final_robot_stop = robot_stop_col - 1 if robot_stop_col != board.width else board.width - 1
+            self.col = min(wall_stop_col, final_robot_stop)
 
     def draw(
         self,
