@@ -23,49 +23,62 @@ class Robot:
     def get_position(self) -> tuple[int, int]:
         return self.row, self.col
 
-    def move(
-        self, direction: Direction, board: Board, all_robots: list["Robot"]
-    ) -> None:
+    def move(self, direction: Direction, board: Board, all_robots: list["Robot"]) -> None:
+        """
+        Moves the robot in the given direction until it hits a wall or another robot.
+        The robot's position is updated in place. This version uses the board's
+        DataFrame for efficient, vectorized obstacle detection.
+        """
+        df = board.df
+        other_robots_pos = {
+            (r.row, r.col) for r in all_robots if r is not self
+        }
+
         if direction == Direction.UP:
-            while (
-                self.row > 0
-                and not board.grid[self.row][self.col].has_wall_north
-                and not board.grid[self.row - 1][self.col].has_wall_south
-            ):
-                # Check for other robots in the next cell
-                if self._is_robot_at(self.row - 1, self.col, all_robots):
-                    break
-                self.row -= 1
+            # Find walls in the path (cells with a north wall)
+            path_df = df[(df["col"] == self.col) & (df["row"] < self.row) & (df["wall_north"] == 1)]
+            wall_rows = path_df["row"]
+            wall_stop_row = wall_rows.max() if not wall_rows.empty else 0
+
+            # Find other robots in the path
+            robot_rows = [r for r, c in other_robots_pos if c == self.col and r < self.row]
+            robot_stop_row = max(robot_rows) if robot_rows else -1
+
+            final_robot_stop = robot_stop_row + 1 if robot_stop_row != -1 else 0
+            self.row = max(wall_stop_row, final_robot_stop)
+
         elif direction == Direction.DOWN:
-            while (
-                self.row < board.height - 1
-                and not board.grid[self.row][self.col].has_wall_south
-                and not board.grid[self.row + 1][self.col].has_wall_north
-            ):
-                # Check for other robots in the next cell
-                if self._is_robot_at(self.row + 1, self.col, all_robots):
-                    break
-                self.row += 1
+            path_df = df[(df["col"] == self.col) & (df["row"] > self.row) & (df["wall_south"] == 1)]
+            wall_rows = path_df["row"]
+            wall_stop_row = wall_rows.min() if not wall_rows.empty else board.height - 1
+
+            robot_rows = [r for r, c in other_robots_pos if c == self.col and r > self.row]
+            robot_stop_row = min(robot_rows) if robot_rows else board.height
+
+            final_robot_stop = robot_stop_row - 1 if robot_stop_row != board.height else board.height - 1
+            self.row = min(wall_stop_row, final_robot_stop)
+
         elif direction == Direction.LEFT:
-            while (
-                self.col > 0
-                and not board.grid[self.row][self.col].has_wall_west
-                and not board.grid[self.row][self.col - 1].has_wall_east
-            ):
-                # Check for other robots in the next cell
-                if self._is_robot_at(self.row, self.col - 1, all_robots):
-                    break
-                self.col -= 1
+            path_df = df[(df["row"] == self.row) & (df["col"] < self.col) & (df["wall_west"] == 1)]
+            wall_cols = path_df["col"]
+            wall_stop_col = wall_cols.max() if not wall_cols.empty else 0
+
+            robot_cols = [c for r, c in other_robots_pos if r == self.row and c < self.col]
+            robot_stop_col = max(robot_cols) if robot_cols else -1
+
+            final_robot_stop = robot_stop_col + 1 if robot_stop_col != -1 else 0
+            self.col = max(wall_stop_col, final_robot_stop)
+
         elif direction == Direction.RIGHT:
-            while (
-                self.col < board.width - 1
-                and not board.grid[self.row][self.col].has_wall_east
-                and not board.grid[self.row][self.col + 1].has_wall_west
-            ):
-                # Check for other robots in the next cell
-                if self._is_robot_at(self.row, self.col + 1, all_robots):
-                    break
-                self.col += 1
+            path_df = df[(df["row"] == self.row) & (df["col"] > self.col) & (df["wall_east"] == 1)]
+            wall_cols = path_df["col"]
+            wall_stop_col = wall_cols.min() if not wall_cols.empty else board.width - 1
+
+            robot_cols = [c for r, c in other_robots_pos if r == self.row and c > self.col]
+            robot_stop_col = min(robot_cols) if robot_cols else board.width
+
+            final_robot_stop = robot_stop_col - 1 if robot_stop_col != board.width else board.width - 1
+            self.col = min(wall_stop_col, final_robot_stop)
 
     def draw(
         self,

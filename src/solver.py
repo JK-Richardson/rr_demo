@@ -51,6 +51,12 @@ class RobotContainer:
         self.green_robot.row, self.green_robot.col = state.GREEN
         self.yellow_robot.row, self.yellow_robot.col = state.YELLOW
 
+    def get_robots_copy(self) -> list[Robot]:
+        """
+        Returns a deep copy of the robots, ensuring their state is consistent.
+        """
+        return copy.deepcopy(self.robots)
+
 
 class Solver:
     def __init__(self, game: Game) -> None:
@@ -59,15 +65,15 @@ class Solver:
         self.game = game
         _robots = copy.deepcopy(game.robots)
         self.robot_container = RobotContainer(_robots)
+        self.target_robot_color = game.target_robot_color
+        self.target_coords = game.target_cell_coords
 
-    def is_goal_state(self, game: Game, robots: list[Robot]) -> bool:
+    def is_goal_state(self, robots: list[Robot]) -> bool:
         """Checks if the target robot has reached the goal target"""
-        target_robot_color = game.target_robot_color
         target_robot = next(
-            robot for robot in robots if robot.color == target_robot_color
+            robot for robot in robots if robot.color == self.target_robot_color
         )
-        target_coords = game.target_cell_coords
-        return (target_robot.row, target_robot.col) == target_coords
+        return (target_robot.row, target_robot.col) == self.target_coords
 
     def solve(self) -> Solution:
         """
@@ -75,12 +81,10 @@ class Solver:
         Returns a Solution object with the path to the goal (if found).
         """
         robot_container = self.robot_container
-        robots = robot_container.robots
         game = self.game
         initial_state = robot_container.get_state()
         self.visited: set[State] = set()
         self.queue: deque[tuple[State, list[Move]]] = deque([(initial_state, [])])
-        self.queue.append((initial_state, []))  # (State, moves)
         self.visited.add(initial_state)
         solution = Solution()
 
@@ -88,22 +92,29 @@ class Solver:
             state, path = self.queue.popleft()
             robot_container.apply_state(state)
 
-            if self.is_goal_state(game=self.game, robots=robots):
+            if self.is_goal_state(robots=robot_container.robots):
                 self.solution_path = path
                 solution = Solution(moves=path)
                 break
 
             # For each robot, try each direction
-            for robot_idx, robot in enumerate(robots):
+            for robot_idx, _ in enumerate(robot_container.robots):
                 for direction in Direction:
+                    robots = robot_container.get_robots_copy()
+                    moving_robot = robots[robot_idx]
+                    original_pos = moving_robot.get_position()
+
                     # Move the robot
-                    robot.move(direction, game.board, robots)
-                    new_state = robot_container.get_state()
-                    if new_state not in self.visited:
-                        self.visited.add(new_state)
-                        move_desc: Move = (robot_idx, direction.name)
-                        self.queue.append((new_state, path + [move_desc]))
-                    # Reset state for next iteration
-                    robot_container.apply_state(state)
+                    moving_robot.move(direction, game.board, robots)
+
+                    # Only proceed if the robot has actually moved
+                    if moving_robot.get_position() != original_pos:
+                        temp_container = RobotContainer(robots)
+                        new_state = temp_container.get_state()
+
+                        if new_state not in self.visited:
+                            self.visited.add(new_state)
+                            move_desc: Move = (robot_idx, direction.name)
+                            self.queue.append((new_state, path + [move_desc]))
 
         return solution

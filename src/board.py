@@ -4,6 +4,7 @@ from typing import Any  # Import Any for type hinting
 
 import pygame
 import yaml
+import pandas as pd
 
 from .common import (  # Import Target, TargetShape, TARGET_SHAPES, TARGET_COLORS from common.py
     TARGET_COLORS,
@@ -85,6 +86,9 @@ class Board:
 
         self._apply_walls(config)
 
+        # Create and store the board layout as a DataFrame
+        self.df: pd.DataFrame = self.to_dataframe()
+
     def get_target_coords(self, target: Target) -> tuple[int, int]:
         """Returns (row, col) for the given target"""
         return self._target_lookup[target]
@@ -109,14 +113,23 @@ class Board:
             # Convert string key "(row, col)" to tuple (row, col)
             row, col = map(int, coord_str.strip("()").split(","))
             cell = self.grid[row][col]
+            # Set walls symmetrically for both the cell and its neighbor
             if "N" in wall_def:
                 cell.has_wall_north = True
+                if row > 0:
+                    self.grid[row - 1][col].has_wall_south = True
             if "E" in wall_def:
                 cell.has_wall_east = True
+                if col < self.width - 1:
+                    self.grid[row][col + 1].has_wall_west = True
             if "S" in wall_def:
                 cell.has_wall_south = True
+                if row < self.height - 1:
+                    self.grid[row + 1][col].has_wall_north = True
             if "W" in wall_def:
                 cell.has_wall_west = True
+                if col > 0:
+                    self.grid[row][col - 1].has_wall_east = True
 
     def _create_empty_grid(self, width: int, height: int) -> list[list[Cell]]:
         grid: list[list[Cell]] = []
@@ -192,3 +205,27 @@ class Board:
                     _font = pygame.font.SysFont(None, 24)
                     text: pygame.Surface = _font.render(f"{r},{c}", True, (0, 0, 0))
                     screen.blit(text, (x + 5, y + 5))
+
+    def to_dataframe(self) -> pd.DataFrame:
+        """
+        Exports the board's wall layout to a pandas DataFrame.
+
+        The DataFrame contains the row and column for each cell, and binary indicators
+        for the presence of a wall on each of its four sides.
+
+        Returns:
+            pd.DataFrame: A DataFrame with columns for row, col, and wall presence.
+        """
+        data = []
+        for r in range(self.height):
+            for c in range(self.width):
+                cell = self.grid[r][c]
+                data.append({
+                    "row": r,
+                    "col": c,
+                    "wall_north": 1 if cell.has_wall_north else 0,
+                    "wall_east": 1 if cell.has_wall_east else 0,
+                    "wall_south": 1 if cell.has_wall_south else 0,
+                    "wall_west": 1 if cell.has_wall_west else 0,
+                })
+        return pd.DataFrame(data)
